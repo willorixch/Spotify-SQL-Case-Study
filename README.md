@@ -1,5 +1,8 @@
 # Spotify Cross-Platform SQL Analysis Case Study
 
+<img width="800" height="450" alt="image" src="https://github.com/user-attachments/assets/c3c30071-2b5b-45cc-a6e4-894577826ccd" />
+
+
 ## Overview
 This repository contains a unique Spotify SQL analysis case study blending data exploration with multifaceted lens of creativity.
 This dataset captures various attributes about tracks, albums, and artist enabling a deep dive into cross-platform engagement between Spotify and YouTube.
