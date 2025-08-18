@@ -1,44 +1,6 @@
---Question 1:
---Which artists would be the best headliners for an end-of-summer festival—artists who not 
---only rank in the top 15% for total engagement (streams + views) but also have the right 
---musical attributes to keep the crowd moving all night? Return the top 8 artists ordered 
---descending by their Festival Vibe Score.
-
-with totals as (
-	select artist, (sum(stream) + sum(views)) as total_engagement, 
-	avg(tempo) as avg_tempo, avg(danceability) as avg_dance,
-	avg(liveness) as avg_live, avg(energy) as avg_energy, avg(energy_liveness) as avg_el
-	from spotify
-	group by artist
-),
-
-percentiles as (
-	select artist, total_engagement,
-	(1 - percent_rank() over(order by avg_tempo desc)) as rnt,
-	(1 - percent_rank() over(order by avg_dance desc )) as rnd,
-	(1 - percent_rank() over(order by avg_live desc)) as rnl,
-	(1 - percent_rank() over(order by avg_energy desc)) as rne,
-	(1 - percent_rank() over(order by avg_el desc)) as rnel
-	from totals
-),
-
-percent_sums as (
-	select artist, total_engagement, ((rnt + rnd + rnl + rne + rnel) / 5) as vibe_score
-	from percentiles
-),
-
-thresholds as ( 
-	select percentile_cont(0.85) within group (order by total_engagement desc) as p85
-	from totals
-)
-
-
-select ps.artist, round(ps.vibe_score::numeric,4) as festival_vibe_score
-from percent_sums as ps
-cross join thresholds as t
-where ps.total_engagement >= t.p85
-order by ps.vibe_score desc
-limit 8
+-- ==========================
+-- EASY QUERIES
+-- ==========================
 
 --Question 2: 
 --For each album, calculate the average tempo and total number of tracks. 
@@ -48,7 +10,7 @@ from spotify
 group by album
 having count(track) >= 3
 order by avg_tempo desc
-limit 10
+limit 10;
 
 --Question 3: 
 --Which tracks have a duration longer than the global average track duration 
@@ -58,8 +20,74 @@ from spotify
 where duration_min >= 
 (select avg(duration_min) from spotify)
 and 
-danceability >= (select avg(danceability) from spotify)
+danceability >= (select avg(danceability) from spotify);
 
+-- Question 5 Part A: 
+--For each artist, return their top 3 most-viewed tracks based on the number of YouTube views. 
+--Use a window function to rank tracks and return only the top 3 per artist.
+select most.artist, most.track, most.viewed_tracks
+from (
+	select artist, track, row_number() over(partition by artist order by views desc) as viewed_tracks
+	from spotify
+) as most
+where most.viewed_tracks <= 3;
+
+-- Question 6: 
+--Which artist has the highest average stream count per track?
+WITH max_count AS (
+  SELECT artist, SUM(stream) AS max_streams, COUNT(track) AS num_tracks
+  FROM spotify
+  GROUP BY artist
+)
+SELECT artist,
+       ROUND((max_streams * 1.0 / num_tracks), 2) AS highest_avg_stream
+FROM max_count
+ORDER BY highest_avg_stream DESC;
+
+-- Question 7: What are the total streams and views per artist and their most played platform?
+SELECT totals.artist, totals.total_streams, totals.total_views, totals.most_played_on
+FROM (
+  SELECT artist, SUM(stream) AS total_streams, SUM(views) AS total_views, most_played_on
+  FROM spotify
+  GROUP BY artist, most_played_on
+) AS totals
+ORDER BY totals.total_streams DESC, totals.total_views DESC;
+
+-- Question 9: 
+--Rank artists based on their total Spotify streams
+with total_streams as (
+	select artist, sum(stream) as total_stream
+	from spotify
+	group by artist
+)
+
+select artist, total_stream, rank() over(order by total_stream desc) as rank_order
+from total_streams
+order by total_stream desc;
+
+-- Question 10: 
+--Write a query to find tracks where the liveness score is above the average 
+with avg_track_liveness as(	
+	select track, liveness, 
+	(select round((sum(liveness) * 1.0 / count(track))::numeric, 2) from spotify) as avg_liveness
+	from spotify
+)
+
+select track, liveness
+from avg_track_liveness
+where liveness > avg_liveness;
+
+-- Bonus: Question 16: 
+--Find all the tracks, streams, and views where Olivia Rodrigo is the artist
+-- List the streaming and viewing numbers from greatest to least
+select artist, track, stream, views
+from spotify
+where artist = 'Olivia Rodrigo'
+order by stream desc, views desc;
+
+-- ==========================
+-- MEDIUM QUERIES
+-- ==========================
 --Question 4:
 --Which 5 artists have the highest consistency between their top 3 
 --most-streamed tracks and top 3 most-viewed tracks, based on overlap in track titles?
@@ -78,17 +106,7 @@ views_rank as (
 select sr.artist, sr.track, vr.track 
 from stream_rank as sr
 inner join views_rank as vr on sr.artist = vr.artist and sr.track = vr.track
-where rn_stream <= 3 and rn_views <= 3 
-
--- Question 5 Part A: 
---For each artist, return their top 3 most-viewed tracks based on the number of YouTube views. 
---Use a window function to rank tracks and return only the top 3 per artist.
-select most.artist, most.track, most.viewed_tracks
-from (
-	select artist, track, row_number() over(partition by artist order by views desc) as viewed_tracks
-	from spotify
-) as most
-where most.viewed_tracks <= 3
+where rn_stream <= 3 and rn_views <= 3;
 
 -- Question 5 Part B:
 --Order the result from Part A by the sum of views across each artist’s top 3 tracks, from highest to lowest total.
@@ -112,26 +130,6 @@ select artist, track, track_rank
 from artist_totals
 order by total_views;
 
--- Question 6: 
---Which artist has the highest average stream count per track?
-WITH max_count AS (
-  SELECT artist, SUM(stream) AS max_streams, COUNT(track) AS num_tracks
-  FROM spotify
-  GROUP BY artist
-)
-SELECT artist,
-       ROUND((max_streams * 1.0 / num_tracks), 2) AS highest_avg_stream
-FROM max_count
-ORDER BY highest_avg_stream DESC;
-
--- Question 7: What are the total streams and views per artist and their most played platform?
-SELECT totals.artist, totals.total_streams, totals.total_views, totals.most_played_on
-FROM (
-  SELECT artist, SUM(stream) AS total_streams, SUM(views) AS total_views, most_played_on
-  FROM spotify
-  GROUP BY artist, most_played_on
-) AS totals
-ORDER BY totals.total_streams DESC, totals.total_views DESC;
 
 -- Question 8 Part A: 
 --For each artist, what is their dominant platform (Spotify or YouTube), 
@@ -189,30 +187,6 @@ SELECT artist,
        ) AS rank_in_total_engagement
 FROM artist_platform_metrics;
 
--- Question 9: 
---Rank artists based on their total Spotify streams
-with total_streams as (
-	select artist, sum(stream) as total_stream
-	from spotify
-	group by artist
-)
-
-select artist, total_stream, rank() over(order by total_stream desc) as rank_order
-from total_streams
-order by total_stream desc
-
--- Question 10: 
---Write a query to find tracks where the liveness score is above the average 
-with avg_track_liveness as(	
-	select track, liveness, 
-	(select round((sum(liveness) * 1.0 / count(track))::numeric, 2) from spotify) as avg_liveness
-	from spotify
-)
-
-select track, liveness
-from avg_track_liveness
-where liveness > avg_liveness
-
 -- Question 11: 
 --Use a WITH clause to calculate the difference between 
 --the highest and lowest energy values for tracks in each album.
@@ -224,7 +198,7 @@ with album_energy_diff as (
 )
 select album, energy_track_diff
 from album_energy_diff
-order by energy_track_diff desc
+order by energy_track_diff desc;
 
 --Question 12: 
 --Which artists have a higher-than-average likes-to-views 
@@ -245,7 +219,7 @@ select round(sum(likes)::numeric *1.0 / sum(views)::numeric *1.0, 4)
 from spotify 
 where views!= 0
 )
-order by artist_avg_ratio desc
+order by artist_avg_ratio desc;
 
 -- Question 13 Part A: 
 --For each artist, calculate the standard deviation of streams per track. 
@@ -256,7 +230,7 @@ where stream is not null and stream > 0
 group by artist
 having count(track) >= 1
 order by stream_stddev
-limit 10
+limit 10;
 
 --Question 13 Part B: 
 --Identify the most consistent artists by streams per track using 
@@ -275,7 +249,54 @@ select artist, round(((std_dev) / (avg_stream)),4) as cv
 from consistent_artist
 where total_streams > 100000
 order by cv
-limit 10
+limit 10;
+
+
+-- ==========================
+-- ADVANCED QUERIES
+-- ==========================
+
+--Question 1:
+--Which artists would be the best headliners for an end-of-summer festival—artists who not 
+--only rank in the top 15% for total engagement (streams + views) but also have the right 
+--musical attributes to keep the crowd moving all night? Return the top 8 artists ordered 
+--descending by their Festival Vibe Score.
+
+with totals as (
+	select artist, (sum(stream) + sum(views)) as total_engagement, 
+	avg(tempo) as avg_tempo, avg(danceability) as avg_dance,
+	avg(liveness) as avg_live, avg(energy) as avg_energy, avg(energy_liveness) as avg_el
+	from spotify
+	group by artist
+),
+
+percentiles as (
+	select artist, total_engagement,
+	(1 - percent_rank() over(order by avg_tempo desc)) as rnt,
+	(1 - percent_rank() over(order by avg_dance desc )) as rnd,
+	(1 - percent_rank() over(order by avg_live desc)) as rnl,
+	(1 - percent_rank() over(order by avg_energy desc)) as rne,
+	(1 - percent_rank() over(order by avg_el desc)) as rnel
+	from totals
+),
+
+percent_sums as (
+	select artist, total_engagement, ((rnt + rnd + rnl + rne + rnel) / 5) as vibe_score
+	from percentiles
+),
+
+thresholds as ( 
+	select percentile_cont(0.85) within group (order by total_engagement desc) as p85
+	from totals
+)
+
+
+select ps.artist, round(ps.vibe_score::numeric,4) as festival_vibe_score
+from percent_sums as ps
+cross join thresholds as t
+where ps.total_engagement >= t.p85
+order by ps.vibe_score desc
+limit 8;
 
 --Question 14:
 --Identify the top 5 artists whose Spotify–YouTube track performance is most balanced, 
@@ -373,20 +394,7 @@ scored as (
 select artist, total_streams, total_views, base_rank, (base_rank + 0.1*hit_ranking - 0.05*flop_ranking) as balance_rank
 from scored
 order by balance_rank desc
-limit 5
-
--- Bonus: Question 16: 
---Find all the tracks, streams, and views where Olivia Rodrigo is the artist
--- List the streaming and viewing numbers from greatest to least
-select artist, track, stream, views
-from spotify
-where artist = 'Olivia Rodrigo'
-order by stream desc, views desc;
-
-
-
-
-
+limit 5;
 
 
 
