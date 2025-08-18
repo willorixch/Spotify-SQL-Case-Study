@@ -98,6 +98,96 @@ After inserting the data, various queries can be run to filter, group, and ultim
  * [Full Document Questions](https://docs.google.com/document/d/120jG-nItwBXqaJy3dEA_N6Pd0_0VdrB9afqscWvncdo/edit?usp=sharing)
  * [SQL Queries](https://github.com/willorixch/Spotify-SQL-Case-Study/blob/main/queries/SpotifySQLProject.sql)
 
+#### Easy Queries
+ * Simple retrieval and aggregations
+ * Examples:
+   * Calculate the average tempo and total tracks per album, returning the top 10.
+   * Find tracks with duration longer than the global average and above-average danceability.
+   * Rank artists based on their total Spotify streams.
+
+```sql
+select artist, track, stream, views
+from spotify
+where artist = 'Olivia Rodrigo'
+order by stream desc, views desc;
+```
+#### Medium Queries
+ * Intermediate joins, window functions, and ratios.
+ * Examples:
+   * Identify the 5 artists with the highest overlap between their top 3 streamed and top 3 viewed tracks.
+   * Calculate the standard deviation of streams per track for each artist.
+   * Find artists with above-average likes-to-views ratios and at least 5 official videos.
+
+```sql
+WITH artist_platform_metrics AS (
+    SELECT 
+        artist, 
+        CASE 
+            WHEN stream > views THEN 'Spotify' 
+            ELSE 'YouTube' 
+        END AS dominant_platform,
+        SUM(stream + views) AS total_engagement
+    FROM spotify
+    GROUP BY artist, 
+             CASE 
+                 WHEN stream > views THEN 'Spotify' 
+                 ELSE 'YouTube' 
+             END
+)
+SELECT 
+    artist, 
+    dominant_platform, 
+    total_engagement,
+    ROW_NUMBER() OVER (
+        PARTITION BY dominant_platform 
+        ORDER BY total_engagement DESC
+    ) AS rank_in_total_engagement
+FROM artist_platform_metrics;
+```
+#### Advanced Queries
+* Complex business-like case studies and ranking metrics.
+* Examples:
+  * Determine the best potential headliners for a festival, factoring in both engagement and “Festival Vibe Score”.
+  * Identify the top 5 artists whose Spotify–YouTube performance is most balanced, based on absolute differences.
+  * Pinpoint artists that should be prioritized for dual-format (video + audio) promotion.
+
+```sql
+with totals as (
+	select artist, (sum(stream) + sum(views)) as total_engagement, 
+	avg(tempo) as avg_tempo, avg(danceability) as avg_dance,
+	avg(liveness) as avg_live, avg(energy) as avg_energy, avg(energy_liveness) as avg_el
+	from spotify
+	group by artist
+),
+
+percentiles as (
+	select artist, total_engagement,
+	(1 - percent_rank() over(order by avg_tempo desc)) as rnt,
+	(1 - percent_rank() over(order by avg_dance desc )) as rnd,
+	(1 - percent_rank() over(order by avg_live desc)) as rnl,
+	(1 - percent_rank() over(order by avg_energy desc)) as rne,
+	(1 - percent_rank() over(order by avg_el desc)) as rnel
+	from totals
+),
+
+percent_sums as (
+	select artist, total_engagement, ((rnt + rnd + rnl + rne + rnel) / 5) as vibe_score
+	from percentiles
+),
+
+thresholds as ( 
+	select percentile_cont(0.85) within group (order by total_engagement desc) as p85
+	from totals
+)
+
+
+select ps.artist, round(ps.vibe_score::numeric,4) as festival_vibe_score
+from percent_sums as ps
+cross join thresholds as t
+where ps.total_engagement >= t.p85
+order by ps.vibe_score desc
+limit 8;
+```
 
 ### 3. Results - Outputs and Visualizations from Queries
 
