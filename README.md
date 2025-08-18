@@ -89,9 +89,14 @@ Below is a sample of 10 rows (2 songs per artist) to provide a glimpse of the da
 | Olivia Rodrigo | traitor               | 1,070,224,502| 87,390,538  | Spotify        |
 | Clairo         | Sofia                 | 518,264,885  | 524,064     | Spotify        |
 | Clairo         | Bubble Gum            | 332,692,745  | 123,012     | Spotify        |
-
+| Beabadoobee    | Cofeee                | 114,905,173  | 5,648,813   | Spotify        |
+| Beabadoobee    | the perfect pair      | 52,377,086   | 2,580,366   | Spotify        |
 
 ### 2. Query Analysis
+After inserting the data, various queries can be run to filter, group, and ultimately extract meaningful insights. In this project, I categorized each question into three levels of complexity: Easy, Medium, and Advanced.
+
+[Full Document Questions](https://docs.google.com/document/d/120jG-nItwBXqaJy3dEA_N6Pd0_0VdrB9afqscWvncdo/edit?usp=sharing)
+
 
 ### 3. Results - Outputs and Visualizations from Queries
 
