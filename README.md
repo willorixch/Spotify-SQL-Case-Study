@@ -96,7 +96,7 @@ Below is a sample of 10 rows (2 songs per artist) to provide a glimpse of the da
 After inserting the data, various queries can be run to filter, group, and ultimately extract meaningful insights. In this project, I categorized each question into three levels of complexity: Easy, Medium, and Advanced.
 
  * [Full Document Questions](https://docs.google.com/document/d/120jG-nItwBXqaJy3dEA_N6Pd0_0VdrB9afqscWvncdo/edit?usp=sharing)
- * 
+ * [SQL Queries](https://github.com/willorixch/Spotify-SQL-Case-Study/blob/main/queries/SpotifySQLProject.sql)
 
 
 ### 3. Results - Outputs and Visualizations from Queries
