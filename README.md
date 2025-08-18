@@ -14,7 +14,8 @@ The primary goal was to write efficient and effective queries varying in complex
 ### 1. Data Exploration
 
 #### Links To Datasets
-  * 
+  * [Cleaned Dataset](spotify_cleaned.csv3.csv)
+  * [Orginal Dataset](https://www.kaggle.com/datasets/sanjanchaudhari/spotify-dataset)
 
 ### 2. Query Analysis
 
