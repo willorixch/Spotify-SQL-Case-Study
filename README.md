@@ -4,8 +4,22 @@
 
 
 ## Overview
-This repository contains a unique Spotify SQL analysis case study blending data exploration with multifaceted lens of creativity.
-This dataset captures various attributes about tracks, albums, and artist enabling a deep dive into cross-platform engagement between Spotify and YouTube.
+This repository contains a unique Spotify SQL analysis case study blending data exploration with  multifaceted lens of creativity.
+This dataset captures various attributes about tracks, albums, and artists enabling a deep dive into cross-platform engagement between Spotify and YouTube.
 
-This project ensures a full pipline process of gathering and cleaning data, preforming queries, to visualizing results into meaningful insights like charts and dashboards.
+This project ensures a full pipline process from gathering and cleaning data, preforming queries, to visualizing results into meaningful insights like charts and dashboards.
 The primary goal was to write efficient and effective queries varying in complexity levels (easy, medium, advanced) to provide a distinctive perspective on how data shapes decision making in a fast paced music industry.
+
+## Project Structure
+### 1. Data Exploration
+
+#### Links To Datasets
+  * 
+
+### 2. Query Analysis
+
+### 3. Results - Outputs and Visualizations from Queries
+
+### 4. Case Study Document
+
+### 5. Query Optimization (Coming Soon...)
